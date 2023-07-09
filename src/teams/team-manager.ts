@@ -45,7 +45,7 @@ export class ExtTeamManager extends TwElement {
         ${when(
           !!this.selectedTeamId,
           () => html`
-            <div class="relative flex-1 min-h-0 overflow-auto">
+            <div class="relative flex-1 min-h-0">
               <ext-team-view .teamId=${this.selectedTeamId}></ext-team-view>
             </div>
           `,

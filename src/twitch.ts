@@ -85,6 +85,20 @@ export function getUsers(userIds: string[], auth: Twitch.ext.Authorized) {
     .catch(errorFallback("Failed to fetch Twitch users", [] as User[]));
 }
 
+export type RenderableUser = ReturnType<typeof generateRenderableUser>;
+
+export function generateRenderableUser(user: User) {
+  return { ...user, label: renderUserLabel(user) };
+}
+
+function renderUserLabel(user: User) {
+  if (user.display_name.toLowerCase() === user.login) {
+    return user.display_name;
+  }
+
+  return `${user.display_name} (${user.login})`;
+}
+
 /**
  * Provides a simple wrapper for querying Helix, and ensures auth is set up properly to use the frontend API authentication:
  * See: https://dev.twitch.tv/docs/extensions/frontend-api-usage/

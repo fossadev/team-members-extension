@@ -1,8 +1,9 @@
 {
   "name": "team-members-extension",
-  "private": true,
   "version": "0.0.0",
   "type": "module",
+  "repository": "git@github.com:fossadev/team-members-extension.git",
+  "author": "FossaDev <contact@fossadev.com>",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -11,6 +12,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "fuse.js": "^6.6.2",
     "lit": "^2.7.5"
   },
   "devDependencies": {
@@ -18,6 +20,7 @@
     "autoprefixer": "^10.4.14",
     "postcss": "^8.4.25",
     "prettier": "^3.0.0",
+    "rollup-plugin-html-literals": "^1.1.6",
     "tailwindcss": "^3.3.2",
     "typescript": "^5.0.2",
     "vite": "^4.4.0"
