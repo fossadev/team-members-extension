@@ -1,9 +1,11 @@
 import { customElement, property } from "lit/decorators.js";
 import { TwElement } from "./tw-element";
 import { TemplateResult, html } from "lit";
-import { RenderableUser, Stream } from "./twitch";
+import { RenderableUser, Stream, binViewCount } from "./twitch";
 import type Fuse from "fuse.js";
 import { when } from "lit/directives/when.js";
+
+import "./user-info-overlay";
 
 @customElement("ext-list-user")
 export class ExtListUser extends TwElement {
@@ -16,54 +18,73 @@ export class ExtListUser extends TwElement {
   @property()
   private fuseMatches: Fuse.FuseResultMatch[] = [];
 
+  @property()
+  private modalOpen = false;
+
   render() {
     if (!this.user) return null;
 
     return html`
-      <div class="flex items-center">
-        <div class="flex items-center flex-1 min-w-0">
-          <img
-            src="${this.user.profile_image_url}"
-            alt="${this.user.display_name}"
-            width="30"
-            height="30"
-            loading="lazy"
-            class="rounded-full"
-          />
-          <span
-            class="pl-3 truncate flex-1 min-w-0 text-xs dark:text-gray-200"
-            tabindex="0"
-            aria-label="${this.user.label}"
-            >${renderHighlightedText(this.user.label, this.fuseMatches)}</span
-          >
+      <div
+        role="button"
+        class="block cursor-pointer p-1 w-full rounded-md hover:bg-gray-100 active:bg-gray-300 dark:hover:bg-stone-800 dark:active:bg-stone-900"
+        @click=${this.handleOpen}
+        aria-label="${renderAriaLabel(this.user, this.stream)}"
+        tabindex="0"
+      >
+        <div class="flex items-center">
+          <div class="flex items-center flex-1 min-w-0">
+            <img
+              src="${this.user.profile_image_url}"
+              alt="${this.user.display_name}"
+              width="30"
+              height="30"
+              loading="lazy"
+              class="rounded-full"
+            />
+            <span class="pl-3 truncate flex-1 min-w-0 text-xs dark:text-gray-200"
+              >${renderHighlightedText(this.user.label, this.fuseMatches)}</span
+            >
+          </div>
+          ${when(
+            !!this.stream,
+            () => html`
+              <div class="flex items-center">
+                <div class="w-2 h-2 rounded-full bg-red-600"></div>
+                <span class="text-gray-700 dark:text-gray-300 pl-2 text-xs font-bold"
+                  >${binViewCount(this.stream!.viewer_count)}</span
+                >
+              </div>
+            `,
+          )}
         </div>
-        ${when(
-          !!this.stream,
-          () => html`
-            <div class="flex items-center">
-              <div class="w-2 h-2 rounded-full bg-red-600"></div>
-              <span
-                class="text-gray-700 dark:text-gray-300 pl-2 text-xs font-bold"
-                tabindex="0"
-                aria-label="${this.stream!.viewer_count} viewers"
-                >${renderViewerCount(this.stream!.viewer_count)}</span
-              >
-            </div>
-          `,
-        )}
       </div>
+
+      ${when(
+        this.modalOpen,
+        () => html`
+          <ext-user-info-overlay
+            .stream=${this.stream}
+            .user=${this.user}
+            @close=${this.handleClose}
+          ></ext-user-info-overlay>
+        `,
+      )}
     `;
   }
+
+  private handleOpen = (event: MouseEvent) => {
+    event.preventDefault();
+    this.modalOpen = true;
+  };
+
+  private handleClose = () => {
+    this.modalOpen = false;
+  };
 }
 
-function renderViewerCount(viewCount: number) {
-  if (viewCount >= 1_000_000) {
-    return `${(viewCount / 1_000_000).toPrecision(1)}M`;
-  }
-  if (viewCount >= 1_000) {
-    return `${(viewCount / 1_000).toPrecision(1)}M`;
-  }
-  return viewCount.toString();
+function renderAriaLabel(user: RenderableUser, stream: Stream | null) {
+  return `${user.label}${stream ? `, live with ${stream.viewer_count} viewers` : ""}`;
 }
 
 function renderHighlightedText(content: string, matches: readonly Fuse.FuseResultMatch[]) {

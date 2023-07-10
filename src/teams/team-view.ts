@@ -11,7 +11,7 @@ import {
   getTeam,
   getUsers,
 } from "../twitch";
-import { CachedEmitterController } from "../cached-emitter";
+import { CachedEmitterController } from "../emitters";
 import { classMap } from "lit/directives/class-map.js";
 import { repeat } from "lit/directives/repeat.js";
 
@@ -236,7 +236,7 @@ export class ExtTeamView extends TwElement {
               applyFilters(this.teamData, this.streamCache || { nextUpdateDue: 0, streamsMap: {} }, this.filterParams),
               (user) => user.item.id,
               (user) => html`
-                <li class="py-1" role="listitem">
+                <li role="listitem">
                   <ext-list-user
                     .user=${user.item}
                     .fuseMatches=${user.matches}
