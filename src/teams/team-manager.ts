@@ -2,7 +2,7 @@ import { customElement, property } from "lit/decorators.js";
 import { TwElement } from "../tw-element";
 import { html } from "lit";
 import { BroadcasterTeam, authorizedEvents, getBroadcasterTeams } from "../twitch";
-import { CachedEmitterController } from "../cached-emitter";
+import { CachedEmitterController } from "../emitters";
 import { when } from "lit/directives/when.js";
 
 import "./team-selector";

@@ -1,14 +1,16 @@
-import { createCachedEmitter } from "./cached-emitter";
+import { createCachedEmitter, createEmitter } from "./emitters";
 
 export const authorizedEvents = createCachedEmitter<Twitch.ext.Authorized>();
 export const contextEvents = createCachedEmitter<Partial<Twitch.ext.Context>>();
+export const followEvents = createEmitter<{ login: string }>();
 
 // by setting a single entry point for these callbacks from the extension sdk, we can manage fanout on our own, and lazy components
 // can immediately receive the latest value that Twitch has given us.
 //
 // Use the relevant EmitController instance in Lit elements to automatically manage subscriptions to the cache emit events
-window.Twitch.ext.onAuthorized((v) => authorizedEvents.set(v));
-window.Twitch.ext.onContext((v) => contextEvents.set(v));
+window.Twitch.ext.onAuthorized((v) => authorizedEvents.emit(v));
+window.Twitch.ext.onContext((v) => contextEvents.emit(v));
+window.Twitch.ext.actions.onFollow((didFollow, login) => didFollow && followEvents.emit({ login }));
 
 interface DataResponse<T> {
   data: T;
@@ -56,6 +58,7 @@ export interface Stream {
   user_id: string;
   user_login: string;
   user_name: string;
+  game_name: string;
   type: "live" | "";
   title: string;
   viewer_count: number;
@@ -97,6 +100,16 @@ function renderUserLabel(user: User) {
   }
 
   return `${user.display_name} (${user.login})`;
+}
+
+export function binViewCount(viewCount: number) {
+  if (viewCount >= 1_000_000) {
+    return `${(viewCount / 1_000_000).toPrecision(1)}M`;
+  }
+  if (viewCount >= 1_000) {
+    return `${(viewCount / 1_000).toPrecision(1)}M`;
+  }
+  return viewCount.toString();
 }
 
 /**
