@@ -32,6 +32,15 @@ export class ExtTeamManager extends TwElement {
     if (this.broadcasterTeams === null) {
       return html`<ext-loading-spinner></ext-loading-spinner>`;
     }
+
+    if (this.broadcasterTeams.length === 0) {
+      return html`
+        <div class="flex min-w-0 min-h-0 p-2 text-center items-center w-full h-full">
+          <p class="text-black dark:text-white">This channel does not belong to any teams.</p>
+        </div>
+      `;
+    }
+
     return html`
       <div class="flex flex-col flex-1 min-w-0 min-h-0 w-full h-full">
         <div class="pb-4">
