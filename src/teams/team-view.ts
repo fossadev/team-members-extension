@@ -16,9 +16,12 @@ import { classMap } from "lit/directives/class-map.js";
 import { repeat } from "lit/directives/repeat.js";
 
 import "../list-user";
+import "../list-user-placeholder";
 import "./team-filter";
+import "./team-filter-placeholder";
 import { TeamFilterParams } from "./team-filter";
 import Fuse from "fuse.js";
+import { when } from "lit/directives/when.js";
 
 interface TeamCache {
   team: Team;
@@ -169,6 +172,8 @@ function sortByLiveStatus(users: FilteredUser[], streamData: StreamCache, sortAs
   return [...out.liveUsers, ...out.offlineUsers];
 }
 
+const repeatableLoadingElements = new Array(8).fill(1);
+
 @customElement("ext-team-view")
 export class ExtTeamView extends TwElement {
   private authContext = new CachedEmitterController(this, authorizedEvents);
@@ -201,6 +206,7 @@ export class ExtTeamView extends TwElement {
     if (teamDataCache.has(this.teamId)) {
       // already cached data, skip
       this.teamData = teamDataCache.get(this.teamId) || null;
+      this.resetLiveData();
       return;
     }
 
@@ -215,37 +221,50 @@ export class ExtTeamView extends TwElement {
   }
 
   render() {
-    if (!this.teamData) {
-      return html`<ext-loading-spinner></ext-loading-spinner>`;
-    }
-
     return html`
       <div class="flex-1 h-full min-h-0 w-full flex flex-col">
         <div class="pb-3">
-          <ext-team-filter .params=${this.filterParams} @change=${this.handleFilterChange}></ext-team-filter>
+          ${when(
+            !!this.teamData,
+            () => html`
+              <ext-team-filter .params=${this.filterParams} @change=${this.handleFilterChange}></ext-team-filter>
+            `,
+            () => html`<ext-team-filter-placeholder></ext-team-filter-placeholder>`,
+          )}
         </div>
         <div class="overflow-y-auto flex-1 min-h-0">
-          <ul
-            class="${classMap({
-              "list-none": true,
-              "opacity-75": this.teamId !== this.teamData.team.id,
-            })}"
-            role="list"
-          >
-            ${repeat(
-              applyFilters(this.teamData, this.streamCache || { nextUpdateDue: 0, streamsMap: {} }, this.filterParams),
-              (user) => user.item.id,
-              (user) => html`
-                <li role="listitem">
-                  <ext-list-user
-                    .user=${user.item}
-                    .fuseMatches=${user.matches}
-                    .stream=${this.streamCache?.streamsMap[user.item.id] || null}
-                  ></ext-list-user>
-                </li>
-              `,
-            )}
-          </ul>
+          ${when(
+            !!this.teamData,
+            () => html`
+              <ul
+                class="${classMap({
+                  "list-none": true,
+                  "opacity-75": this.teamId !== this.teamData!.team.id,
+                })}"
+                role="list"
+              >
+                ${repeat(
+                  applyFilters(
+                    this.teamData!,
+                    this.streamCache || { nextUpdateDue: 0, streamsMap: {} },
+                    this.filterParams,
+                  ),
+                  (user) => user.item.id,
+                  (user) => html`
+                    <li role="listitem">
+                      <ext-list-user
+                        .user=${user.item}
+                        .fuseMatches=${user.matches}
+                        .stream=${this.streamCache?.streamsMap[user.item.id] || null}
+                      ></ext-list-user>
+                    </li>
+                  `,
+                )}
+              </ul>
+            `,
+            () =>
+              repeat(repeatableLoadingElements, () => html`<ext-list-user-placeholder></ext-list-user-placeholder>`),
+          )}
         </div>
       </div>
     `;
@@ -274,7 +293,7 @@ export class ExtTeamView extends TwElement {
 
   private requestLiveStatusHydration() {
     if (!this.authContext.value || !this.teamData?.users) return;
-    if (this.streamCache && this.streamCache.nextUpdateDue < Date.now()) {
+    if (this.streamCache && this.streamCache.nextUpdateDue > Date.now()) {
       this.setupNextLivePoll();
       return;
     }
@@ -303,6 +322,9 @@ export class ExtTeamView extends TwElement {
 
       streamDataCache.set(teamData.team.id, cachedItem);
       teamData.team.id === this.teamData?.team.id && (this.streamCache = cachedItem);
+
+      // queue up next poll
+      this.setupNextLivePoll();
     });
   }
 
