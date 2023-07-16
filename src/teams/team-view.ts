@@ -203,6 +203,10 @@ export class ExtTeamView extends TwElement {
   protected updated(changed: Map<string, string>): void {
     if (!changed.has("teamId") || !this.teamId) return;
 
+    // never said this shit was pretty, enjoy this mess of a data fetch/poll spiral.
+    // - it's worth noting that this is deliberately complex, it's trying to optimise
+    //   the polling rate the best it can, and cache as optimally as possible.
+
     if (teamDataCache.has(this.teamId)) {
       // already cached data, skip
       this.teamData = teamDataCache.get(this.teamId) || null;
@@ -292,6 +296,11 @@ export class ExtTeamView extends TwElement {
   }
 
   private requestLiveStatusHydration() {
+    // this is also deliberately complex, it's doing a bunch of things:
+    // - ensuring we only ever call twitch if we *really need to*
+    // - ensuring that the poll rate from old caches is always respected.
+    // - ensuring state from old timers is gracefully cleared up
+
     if (!this.authContext.value || !this.teamData?.users) return;
     if (this.streamCache && this.streamCache.nextUpdateDue > Date.now()) {
       this.setupNextLivePoll();

@@ -1,6 +1,10 @@
 # team-members-extension
 
-A Twitch extension to display all users who are in a Twitch stream in a panel, and their viewership (if they're live).
+![Example screenshot](extension-assets/screenshot.png)
+
+> A Twitch extension to display all users who are in a Twitch stream in a panel, and their viewership (if they're live).
+
+**[This extension is live on Twitch!](https://dashboard.twitch.tv/extensions/3ot63weux43j9va0jy0th37wm2yjlz)**
 
 This extension is written in Web Components using [Lit](https://lit.dev), and makes all of its data calls through the [public Twitch API](https://dev.twitch.tv/docs/api).
 
