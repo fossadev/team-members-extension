@@ -115,6 +115,9 @@ export class ExtSelectTeamMenu extends TwElement {
   }
 
   private switchFocus(down: boolean) {
+    // turns out *good* keyboard navigation is pretty hard to do right
+    // - this is mostly shared with the sort-dropdown code, i'll consolidate these later
+
     const activeElement = this.shadowRoot?.activeElement || document.activeElement;
     if (!activeElement) return;
 
